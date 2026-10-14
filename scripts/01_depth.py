@@ -1,0 +1,36 @@
+from pathlib import Path
+import torch
+from PIL import Image, ImageOps
+from transformers import pipeline
+
+# Check if CUDA is available and set the device accordingly
+# 0 for GPU, -1 for CPU
+device = 0 if torch.cuda.is_available() else -1 
+
+# Load the depth estimation model using the Hugging Face pipeline
+depth_model = pipeline(
+    "depth-estimation",
+    model="depth-anything/Depth-Anything-V2-Small-hf",
+    device=device,
+)
+# Create the output directory if it doesn't exist
+out_dir = Path("outputs") 
+out_dir.mkdir(exist_ok=True) 
+
+# Possible image file extensions to process
+extensions = {".jpg", ".jpeg", ".png"}
+
+for photo in Path("data/photos").iterdir():
+    if photo.suffix.lower() not in extensions:
+        continue # Skips invalid file extensions
+
+    image = Image.open(photo) # Open the image file
+
+    # Depth Anything 
+    image = ImageOps.exif_transpose(image).convert("RGB") # Correct orientation and convert to RGB (3 channels) for consistency
+    image.thumbnail((1024, 1024)) # Resize the image to a maximum of 1024x1024 pixels while maintaining aspect ratio
+    result = depth_model(image)
+    result["depth"].save(out_dir / f"{photo.stem}_depth.png") # Save the depth map as a PNG file in the output directory as "{original_filename}_depth.png"
+    print(f"Depth map saved for {photo.name} as {photo.stem}_depth.png") 
+
+    
