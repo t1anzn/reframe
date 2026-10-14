@@ -1,0 +1,19 @@
+# Python environment and cache
+.venv/
+__pycache__/
+*.pyc
+
+# Data and results
+data/
+outputs/
+runs/
+results/
+
+# Model files
+*.pt
+*.pth
+*.onnx
+
+# Operating system files
+.DS_Store
+Thumbs.db
