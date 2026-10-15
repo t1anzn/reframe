@@ -25,7 +25,7 @@ out_dir.mkdir(exist_ok=True)
 # Possible image file extensions to process
 extensions = {".jpg", ".jpeg", ".png"}
 
-for photo in Path("data/photos").iterdir():
+for photo in sorted(Path("data/photos").iterdir()):
     if photo.suffix.lower() not in extensions:
         continue # Skips invalid file extensions
 
