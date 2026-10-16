@@ -1,5 +1,6 @@
 from pathlib import Path
 import torch
+import numpy as np
 from PIL import Image, ImageOps
 from transformers import pipeline
 
@@ -30,7 +31,9 @@ for photo in Path("data/photos").iterdir():
     image = ImageOps.exif_transpose(image).convert("RGB") # Correct orientation and convert to RGB (3 channels) for consistency
     image.thumbnail((1024, 1024)) # Resize the image to a maximum of 1024x1024 pixels while maintaining aspect ratio
     result = depth_model(image)
+
     result["depth"].save(out_dir / f"{photo.stem}_depth.png") # Save the depth map as a PNG file in the output directory as "{original_filename}_depth.png"
+    np.save(out_dir / f"{photo.stem}_depth.npy", result["predicted_depth"].squeeze().cpu().numpy()) # Save the predicted depth as a NumPy array in the output directory as "{original_filename}_depth.npy"
     print(f"Depth map saved for {photo.name} as {photo.stem}_depth.png") 
 
     
