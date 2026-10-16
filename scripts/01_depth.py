@@ -4,9 +4,14 @@ import numpy as np
 from PIL import Image, ImageOps
 from transformers import pipeline
 
-# Check if CUDA is available and set the device accordingly
-# 0 for GPU, -1 for CPU
-device = 0 if torch.cuda.is_available() else -1 
+# Pick the best available device: NVIDIA GPU, Apple GPU (MPS) or CPU
+if torch.cuda.is_available():
+    device = "cuda"
+elif torch.backends.mps.is_available():
+    device = "mps"
+else:
+    device = "cpu"
+print("using", device)
 
 # Load the depth estimation model using the Hugging Face pipeline
 depth_model = pipeline(
@@ -21,7 +26,7 @@ out_dir.mkdir(exist_ok=True)
 # Possible image file extensions to process
 extensions = {".jpg", ".jpeg", ".png"}
 
-for photo in Path("data/photos").iterdir():
+for photo in sorted(Path("data/photos").iterdir()):
     if photo.suffix.lower() not in extensions:
         continue # Skips invalid file extensions
 
