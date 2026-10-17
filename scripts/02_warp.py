@@ -1,5 +1,6 @@
 import numpy as np
 from PIL import Image, ImageOps
+import cv2 
 
 # Test image name   
 name = "person_03"
@@ -11,6 +12,25 @@ image.thumbnail((1024, 1024)) # Resize the image
 image = np.array(image) # Convert to a NumPy array
 
 # Load the depth map from the .npy file
-disp = np.load(f"./outputs/{name}_depth.npy")
-#print("depth shape:", disp.shape)
+raw_depth = np.load(f"./outputs/{name}_depth.npy")
+#print("depth shape:", raw_depth.shape)
+
+# Make the depth map the same size as the image
+h, w = image.shape[:2] # [576, 1024, 3] -> [576, 1024]
+print("image:", (h, w), "depth:", raw_depth.shape)
+if raw_depth.shape != (h, w): 
+    raw_depth = cv2.resize(raw_depth, (w, h))
+
+# Subtract the minimum value so the depth map starts at 0
+# Scale the depth map to the range [0, 1] for visualization
+d = (raw_depth - raw_depth.min()) / (raw_depth.max() - raw_depth.min())
+
+# White values are nearer, black values are further away
+# Invert the depth map so that white values are further away and black values are nearer
+depth = 1.0 / (d + 0.1) # Invert the depth map and add a small value to avoid division by zero
+print("depth range:", depth.min(), depth.max()) # 1-10
+
+
+
+
 
