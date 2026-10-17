@@ -30,7 +30,26 @@ d = (raw_depth - raw_depth.min()) / (raw_depth.max() - raw_depth.min())
 depth = 1.0 / (d + 0.1) # Invert the depth map and add a small value to avoid division by zero
 print("depth range:", depth.min(), depth.max()) # 1-10
 
+#------
+# Convert points to 3D points
+fov_deg = 60 # Guessing the field of view in degrees 
 
+# Original: fov = 2 * arctan(w / (2 * f))
+# Solved for f: f = (w / 2) / tan(fov / 2)
+# Focal length in pixels
+f = (w / 2) / np.tan(np.radians(fov_deg) / 2)
 
+u, v = np.meshgrid(np.arange(w), np.arange(h)) # Create a grid of pixel coordinates)
+
+#------
+# Convert points to 3D points
+fov_deg = 60 # Guessing the field of view in degrees 
+
+# Original: fov = 2 * arctan(w / (2 * f))
+# Solved for f: f = (w / 2) / tan(fov / 2)
+# Focal length in pixels
+f = (w / 2) / np.tan(np.radians(fov_deg) / 2)
+
+u, v = np.meshgrid(np.arange(w), np.arange(h)) # Create a grid of pixel coordinates)
 
 
