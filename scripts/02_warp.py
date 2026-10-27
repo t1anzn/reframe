@@ -25,8 +25,8 @@ if raw_depth.shape != (h, w):
 # Scale the depth map to the range [0, 1] for visualization
 d = (raw_depth - raw_depth.min()) / (raw_depth.max() - raw_depth.min())
 
-# White values are nearer, black values are further away
-# Invert the depth map so that white values are further away and black values are nearer
+# Invert the depth map to get a distance map
+# d is 1 for the nearest pixel and 0 for the farthest. Flip it into a distance: near becomes small and far becomes large
 depth = 1.0 / (d + 0.1) # Invert the depth map and add a small value to avoid division by zero
 print("depth range:", depth.min(), depth.max()) # 1-10
 
@@ -39,17 +39,16 @@ fov_deg = 60 # Guessing the field of view in degrees
 # Focal length in pixels
 f = (w / 2) / np.tan(np.radians(fov_deg) / 2)
 
-u, v = np.meshgrid(np.arange(w), np.arange(h)) # Create a grid of pixel coordinates)
+# Create a grid of pixel coordinates
+u, v = np.meshgrid(np.arange(w), np.arange(h)) 
 
-#------
-# Convert points to 3D points
-fov_deg = 60 # Guessing the field of view in degrees 
+# Backproject: each pixel becomes a 3D point using its depth and the camera intrinsics (f and the image centre)
+X = (u - w / 2) * depth / f # left-right position in 3D space
+Y = (v - h / 2) * depth / f # up-down position in 3D space
+Z = depth # distance from the camera
 
-# Original: fov = 2 * arctan(w / (2 * f))
-# Solved for f: f = (w / 2) / tan(fov / 2)
-# Focal length in pixels
-f = (w / 2) / np.tan(np.radians(fov_deg) / 2)
-
-u, v = np.meshgrid(np.arange(w), np.arange(h)) # Create a grid of pixel coordinates)
-
+# Identity test: project the 3D points straight back to pixels
+u2 = f * X / Z + w / 2
+v2 = f * Y / Z + h / 2
+print("max error:", np.abs(u2 - u).max(), np.abs(v2 - v).max()) # expect near 0
 
