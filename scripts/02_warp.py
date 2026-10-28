@@ -1,9 +1,10 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from PIL import Image, ImageOps
 import cv2 
 
 # Test image name   
-name = "person_03"
+name = "room_01"
 
 # Load the image and preprocess it
 image = Image.open(f"./data/photos/{name}.png")
@@ -60,3 +61,35 @@ col_new = f * point_x_moved / point_z + w / 2  # where the points end up in the 
 pixels_moved = col - col_new # pixels each point moved to the left
 print("near pixels moved:", pixels_moved[depth < 1.5].mean())
 print("far pixels moved:", pixels_moved[depth > 8].mean()) 
+
+# Round the new columns to whole pixels and keep only points that land inside the image
+col_dst = np.round(col_new).astype(int)
+inside = (col_dst >= 0) & (col_dst < w) # keep only points that land inside the image
+
+# One entry per point that stays in view
+colours = image[inside] # colour of each point
+col_kept = col_dst[inside] # its new column
+row_kept = row[inside] # its row (rows do not change in a sideways shift)
+dist_kept = point_z[inside] # its distance from the camera
+
+# Z-buffer: for every new pixel, remember the smallest distance that landed there
+zbuf = np.full((h, w), np.inf) # Initialize the z-buffer with infinity (no points have landed yet)
+np.minimum.at(zbuf, (row_kept, col_kept), dist_kept) # For each point, update the z-buffer at its new pixel with the minimum distance (nearest point)
+
+# A point wins if it is the nearest one at its new pixel
+win = dist_kept == zbuf[row_kept, col_kept]
+
+shifted = np.zeros_like(image) # starts black
+shifted[row_kept[win], col_kept[win]] = colours[win]
+
+hole = np.isinf(zbuf) # pixels where nothing landed
+
+# Plot the original image, the shifted image and the hole mask
+fig, ax = plt.subplots(1, 3, figsize=(15, 4))
+ax[0].imshow(image)
+ax[0].set_title("Original")
+ax[1].imshow(shifted)
+ax[1].set_title("Camera moved right")
+ax[2].imshow(hole, cmap="gray")
+ax[2].set_title("Hole mask (white = hole)")
+plt.show()
