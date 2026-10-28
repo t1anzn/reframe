@@ -40,15 +40,23 @@ fov_deg = 60 # Guessing the field of view in degrees
 f = (w / 2) / np.tan(np.radians(fov_deg) / 2)
 
 # Create a grid of pixel coordinates
-u, v = np.meshgrid(np.arange(w), np.arange(h)) 
+col, row = np.meshgrid(np.arange(w), np.arange(h)) 
 
 # Backproject: each pixel becomes a 3D point using its depth and the camera intrinsics (f and the image centre)
-X = (u - w / 2) * depth / f # left-right position in 3D space
-Y = (v - h / 2) * depth / f # up-down position in 3D space
-Z = depth # distance from the camera
+point_x = (col - w / 2) * depth / f # left-right position in 3D space
+point_y = (row - h / 2) * depth / f # up-down position in 3D space
+point_z = depth # distance from the camera
 
 # Identity test: project the 3D points straight back to pixels
-u2 = f * X / Z + w / 2
-v2 = f * Y / Z + h / 2
-print("max error:", np.abs(u2 - u).max(), np.abs(v2 - v).max()) # expect near 0
+col_back = f * point_x / point_z + w / 2
+row_back = f * point_y / point_z + h / 2
+print("max error:", np.abs(col_back - col).max(), np.abs(row_back - row).max()) # expect near 0
 
+# Sideways shift: move the camera right by s (same units as depth)
+camera_shift = 0.1
+point_x_moved = point_x - camera_shift # every point is further left as seen from the moved camera
+col_new = f * point_x_moved / point_z + w / 2  # where the points end up in the new image
+
+pixels_moved = col - col_new # pixels each point moved to the left
+print("near pixels moved:", pixels_moved[depth < 1.5].mean())
+print("far pixels moved:", pixels_moved[depth > 8].mean()) 
